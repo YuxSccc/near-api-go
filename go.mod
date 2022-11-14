@@ -1,6 +1,6 @@
-module github.com/aurora-is-near/near-api-go
+module github.com/YuxSccc/near-api-go
 
-go 1.16
+go 1.19
 
 require (
 	github.com/aurora-is-near/go-jsonrpc/v3 v3.1.1
