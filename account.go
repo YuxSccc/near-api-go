@@ -7,8 +7,8 @@ import (
 	"math/big"
 	"strconv"
 
-	"github.com/aurora-is-near/near-api-go/keystore"
-	"github.com/aurora-is-near/near-api-go/utils"
+	"github.com/YuxSccc/near-api-go/keystore"
+	"github.com/YuxSccc/near-api-go/utils"
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/near/borsh-go"
 )

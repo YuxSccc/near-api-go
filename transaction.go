@@ -7,7 +7,7 @@ import (
 	"crypto/sha256"
 	"math/big"
 
-	"github.com/aurora-is-near/near-api-go/utils"
+	"github.com/YuxSccc/near-api-go/utils"
 	"github.com/near/borsh-go"
 )
 
