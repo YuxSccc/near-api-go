@@ -73,6 +73,39 @@ func (c *Connection) Block() (map[string]interface{}, error) {
 	return r, nil
 }
 
+func (c *Connection) BlockHash() (string, error) {
+	block, err := c.Block()
+	if err != nil {
+		return "", err
+	}
+	blockHash := block["header"].(map[string]interface{})["hash"].(string)
+	return blockHash, nil
+}
+
+func (c *Connection) View(methodName string, params map[string]interface{}) (map[string]interface{}, error) {
+	bParam, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+	rpcQueryMap := map[string]interface{}{
+		"request_type": "call_function",
+		"account_id":   "example.near",
+		"method_name":  methodName,
+		"args_base64":  base64.StdEncoding.EncodeToString(bParam),
+	}
+	rpcQueryMap["finality"] = "final"
+
+	res, err := c.call("query", rpcQueryMap)
+	if err != nil {
+		return nil, err
+	}
+	r, ok := res.(map[string]interface{})
+	if !ok {
+		return nil, ErrNotObject
+	}
+	return r, nil
+}
+
 func (c *Connection) Chunk(chunkId string) (map[string]interface{}, error) {
 	res, err := c.call("chunk", map[string]string{
 		"chunk_id": chunkId,
