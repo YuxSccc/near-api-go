@@ -91,14 +91,14 @@ func (c *Connection) BlockHashBase58() ([]byte, error) {
 	return base58.Decode(hash), nil
 }
 
-func (c *Connection) View(methodName string, params map[string]interface{}) (map[string]interface{}, error) {
+func (c *Connection) View(contractName, methodName string, params map[string]interface{}) (map[string]interface{}, error) {
 	bParam, err := json.Marshal(params)
 	if err != nil {
 		return nil, err
 	}
 	rpcQueryMap := map[string]interface{}{
 		"request_type": "call_function",
-		"account_id":   "example.near",
+		"account_id":   contractName,
 		"method_name":  methodName,
 		"args_base64":  base64.StdEncoding.EncodeToString(bParam),
 	}
