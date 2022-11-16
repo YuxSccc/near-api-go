@@ -155,6 +155,24 @@ func (a *Account) SignAndSendTransactionAsync(
 	return a.conn.SendTransactionAsync(buf)
 }
 
+func (a *Account) Nonce() (int64, error) {
+	_, ak, err := a.findAccessKey()
+	if err != nil {
+		return 0, err
+	}
+	var nonce int64
+	jsonNonce, ok := ak["nonce"].(json.Number)
+	if ok {
+		nonce, err = jsonNonce.Int64()
+		if err != nil {
+			return 0, err
+		}
+		nonce++
+		return nonce, nil
+	}
+	return 0, ErrNotObject
+}
+
 func (a *Account) signTransaction(
 	receiverID string,
 	actions []Action,
@@ -206,10 +224,12 @@ func (a *Account) findAccessKey() (publicKey ed25519.PublicKey, accessKey map[st
 	return pk, ak, nil
 }
 
-func (a *Account) SignFunctionCall(contractID, methodName string, args map[string]interface{}, gas uint64, amount big.Int) ([]byte, error) {
+func (a *Account) SignFunctionCall(contractID, methodName string,
+	args map[string]interface{}, nonce int64, blockHash []byte,
+	gas uint64, amount big.Int) ([]byte, []byte, error) {
 	bArgs, err := json.Marshal(args)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	actions := []Action{{
 		Enum: 2,
@@ -220,16 +240,19 @@ func (a *Account) SignFunctionCall(contractID, methodName string, args map[strin
 			Deposit:    amount,
 		},
 	}}
-	_, signedTx, err := a.signTransaction(contractID, actions)
+
+	txHash, signedTx, err := signTransaction(contractID, uint64(nonce), actions, blockHash,
+		a.kp.Ed25519PubKey, a.kp.Ed25519PrivKey, a.kp.AccountID)
+
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	buf, err := borsh.Serialize(*signedTx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return buf, nil
+	return txHash, buf, nil
 }
 
 // FunctionCall performs a NEAR function call.

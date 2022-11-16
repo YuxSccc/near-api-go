@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/btcsuite/btcutil/base58"
 	"net/http"
 	"time"
 
@@ -80,6 +81,14 @@ func (c *Connection) BlockHash() (string, error) {
 	}
 	blockHash := block["header"].(map[string]interface{})["hash"].(string)
 	return blockHash, nil
+}
+
+func (c *Connection) BlockHashBase58() ([]byte, error) {
+	hash, err := c.BlockHash()
+	if err != nil {
+		return nil, err
+	}
+	return base58.Decode(hash), nil
 }
 
 func (c *Connection) View(methodName string, params map[string]interface{}) (map[string]interface{}, error) {
