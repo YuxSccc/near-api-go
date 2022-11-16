@@ -26,6 +26,20 @@ type Ed25519KeyPair struct {
 	Ed25519PrivKey ed25519.PrivateKey `json:"-"`
 }
 
+func NewEd25519KeyPair(privateKey string, accountId string) *Ed25519KeyPair {
+	pri := ed25519.PrivateKey(privateKey)
+	pub := ed25519.PublicKey(pri.Public().([]byte))
+	kp := &Ed25519KeyPair{
+		AccountID:      accountId,
+		PublicKey:      ed25519Prefix + base58.Encode(pub),
+		PrivateKey:     ed25519Prefix + base58.Encode(pri),
+		SecretKey:      "",
+		Ed25519PubKey:  pub,
+		Ed25519PrivKey: pri,
+	}
+	return kp
+}
+
 // GenerateEd25519KeyPair generates a new Ed25519 key pair for accountID.
 func GenerateEd25519KeyPair(accountID string) (*Ed25519KeyPair, error) {
 	var (

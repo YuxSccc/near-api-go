@@ -51,6 +51,15 @@ func LoadAccount(c *Connection, cfg *Config, receiverID string) (*Account, error
 	return &a, nil
 }
 
+func NewAccount(key string, accountId string) *Account {
+	acc := &Account{
+		conn:                      nil,
+		kp:                        keystore.NewEd25519KeyPair(key, accountId),
+		accessKeyByPublicKeyCache: make(map[string]map[string]interface{}),
+	}
+	return acc
+}
+
 // SendMoney sends amount NEAR from account to receiverID.
 func (a *Account) SendMoney(
 	receiverID string,
@@ -195,6 +204,32 @@ func (a *Account) findAccessKey() (publicKey ed25519.PublicKey, accessKey map[st
 	}
 	a.accessKeyByPublicKeyCache[string(publicKey)] = ak
 	return pk, ak, nil
+}
+
+func (a *Account) SignFunctionCall(contractID, methodName string, args map[string]interface{}, gas uint64, amount big.Int) ([]byte, error) {
+	bArgs, err := json.Marshal(args)
+	if err != nil {
+		return nil, err
+	}
+	actions := []Action{{
+		Enum: 2,
+		FunctionCall: FunctionCall{
+			MethodName: methodName,
+			Args:       bArgs,
+			Gas:        gas,
+			Deposit:    amount,
+		},
+	}}
+	_, signedTx, err := a.signTransaction(contractID, actions)
+	if err != nil {
+		return nil, err
+	}
+
+	buf, err := borsh.Serialize(*signedTx)
+	if err != nil {
+		return nil, err
+	}
+	return buf, nil
 }
 
 // FunctionCall performs a NEAR function call.
